@@ -39,10 +39,10 @@ let grow_over_next_steps t by_how_much =
 let locations t = t.locations
 
 (* TODO: Implement [head_location]. *)
-let head_location t = { Position.row = 0; col = 0 }
+let head_location t = List.hd_exn t.locations
 
 (* TODO: Implement [set_direction]. *)
-let set_direction t direction = t
+let set_direction t direction = { t with direction }
 
 (* TODO: Implement [step].
 
@@ -51,4 +51,20 @@ let set_direction t direction = t
    [step] should:
    - move the snake forward one block, growing it and updating [t.locations] if necessary
    - check for self collisions *)
-let step t = Some t
+let remove_last_elf lst =
+   match List.rev lst with
+   | [] -> []
+   | _ :: xs -> List.rev xs
+;;
+
+let step ({ direction; extensions_remaining; locations } as t) =
+   let body, extensions_remaining =
+      if extensions_remaining > 0
+      then locations, extensions_remaining - 1
+   else remove_last_elf locations, extensions_remaining
+   in
+   let new_head = Direction.next_position direction (head_location t) in
+   match List.mem body new_head ~equal:[%compare.equal: Position.t] with
+   | true -> None
+   | false -> Some { t with locations = new_head :: body; extensions_remaining } 
+;;
